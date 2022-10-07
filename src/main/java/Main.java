@@ -19,7 +19,6 @@ public class Main implements Serializable{
 
                     JSONObject jsonObject = (JSONObject) in.readObject();
                     jsonObject = JSONProcessing.processing(jsonObject);
-
                     out.println(jsonObject);
 
                 } catch (ClassNotFoundException e) {

@@ -30,12 +30,20 @@ public class JSONProcessing {
         int a = 0;
         for (var entry : tsv.entrySet()) {
             if (jsonObject.get("title").equals(entry.getKey())) {
-                listOfCategories.put(entry.getValue(), (Integer) jsonObject.get("sum") + listOfCategories.get(entry.getValue()));
+                if (listOfCategories.get(entry.getValue()) != null) {
+                    listOfCategories.put(entry.getValue(), (Integer) jsonObject.get("sum") + listOfCategories.get(entry.getValue()));
+                } else {
+                    listOfCategories.put(entry.getValue(), (Integer) jsonObject.get("sum"));
+                }
                 a = 1;
             }
         }
         if (a == 0) {
-            listOfCategories.put("другое", (Integer) jsonObject.get("sum") + listOfCategories.get("другое"));
+            if (listOfCategories.get("другое") != null) {
+                listOfCategories.put("другое", (Integer) jsonObject.get("sum") + listOfCategories.get("другое"));
+            } else {
+                listOfCategories.put("другое", (Integer) jsonObject.get("sum"));
+            }
         }
 
         Map.Entry<String, Integer> listMaxEntry = null;
