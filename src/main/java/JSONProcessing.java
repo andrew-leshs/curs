@@ -1,20 +1,18 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.simple.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class JSONProcessing {
 
-    private static HashMap<String, Integer> listOfCategories = new HashMap<>();
-    private static HashMap<String, String> tsv = new HashMap<>();
+    private HashMap<String, Integer> listOfCategories = new HashMap<>();
+    public HashMap<String, String> tsv = new HashMap<>();
 
-    public static JSONObject processing(JSONObject jsonObject) {
-
-        try (BufferedReader br = new BufferedReader(new FileReader("categories.tsv"))) {
+    public void parsing(File file) {
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 
             String s;
             List<String> list;
@@ -26,24 +24,23 @@ public class JSONProcessing {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String processing(String jsonObject) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        Gson gson = gsonBuilder.create();
+        ClientJSON clientJSON = gson.fromJson(jsonObject, ClientJSON.class);
+
 
         int a = 0;
         for (var entry : tsv.entrySet()) {
-            if (jsonObject.get("title").equals(entry.getKey())) {
-                if (listOfCategories.get(entry.getValue()) != null) {
-                    listOfCategories.put(entry.getValue(), (Integer) jsonObject.get("sum") + listOfCategories.get(entry.getValue()));
-                } else {
-                    listOfCategories.put(entry.getValue(), (Integer) jsonObject.get("sum"));
-                }
+            if (clientJSON.getTitle().equals(entry.getKey())) {
+                listOfCategories.merge(entry.getValue(), clientJSON.getSum(), Integer::sum);
                 a = 1;
             }
         }
         if (a == 0) {
-            if (listOfCategories.get("другое") != null) {
-                listOfCategories.put("другое", (Integer) jsonObject.get("sum") + listOfCategories.get("другое"));
-            } else {
-                listOfCategories.put("другое", (Integer) jsonObject.get("sum"));
-            }
+            listOfCategories.merge("другое", clientJSON.getSum(), Integer::sum);
         }
 
         Map.Entry<String, Integer> listMaxEntry = null;
@@ -56,13 +53,16 @@ public class JSONProcessing {
                 }
             }
         }
+        GsonBuilder gsonBuilder1 = new GsonBuilder();
+        Gson gson1 = gsonBuilder1.create();
 
-        JSONObject root = new JSONObject();
-        JSONObject max = new JSONObject();
-        max.put("category", listMaxEntry.getKey());
-        max.put("sum", listMaxEntry.getValue());
+        JSONProcessingJSON json = new JSONProcessingJSON();
+        json.setCategory(listMaxEntry.getKey());
+        json.setSum(listMaxEntry.getValue());
+        Category category = new Category();
+        category.setJsonProcessingJSON(json);
 
-        root.put("maxCategory", max);
-        return root;
+
+        return gson1.toJson(category, Category.class);
     }
 }
